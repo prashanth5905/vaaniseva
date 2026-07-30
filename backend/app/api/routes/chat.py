@@ -1,5 +1,7 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
+
+from app.schemas.chat import ChatRequest, ChatResponse
+from app.services.chat import process_message
 
 
 router = APIRouter(
@@ -8,18 +10,6 @@ router = APIRouter(
 )
 
 
-class ChatRequest(BaseModel):
-    message: str
-
-
-class ChatResponse(BaseModel):
-    message: str
-    response: str
-
-
 @router.post("/message", response_model=ChatResponse)
 def send_message(request: ChatRequest) -> ChatResponse:
-    return ChatResponse(
-        message=request.message,
-        response="VaaniSeva received your message."
-    )
+    return process_message(request)

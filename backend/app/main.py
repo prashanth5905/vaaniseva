@@ -1,12 +1,14 @@
 from fastapi import FastAPI
 
-from app.api.routes.system import router as system_router
 from app.api.routes.chat import router as chat_router
+from app.api.routes.system import router as system_router
+from app.core.config import settings
+
 
 app = FastAPI(
-    title="VaaniSeva API",
+    title=settings.APP_NAME,
     description="Backend API for the VaaniSeva government service assistant.",
-    version="0.1.0",
+    version=settings.APP_VERSION,
 )
 
 
@@ -19,10 +21,10 @@ def root() -> dict[str, str]:
 
 app.include_router(
     system_router,
-    prefix="/api/v1",
+    prefix=settings.API_V1_PREFIX,
 )
 
 app.include_router(
     chat_router,
-    prefix="/api/v1",
+    prefix=settings.API_V1_PREFIX,
 )
