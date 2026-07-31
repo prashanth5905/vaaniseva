@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "VaaniSeva API"
     APP_VERSION: str = "0.1.0"
     API_V1_PREFIX: str = "/api/v1"
-
+    OTP_SECRET_KEY: str
     DATABASE_URL: str
 
     model_config = SettingsConfigDict(

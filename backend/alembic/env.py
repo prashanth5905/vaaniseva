@@ -4,7 +4,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from app.core.config import settings
 from app.db.base import Base
-from app.models import citizen  # noqa: F401
+from app.models import citizen, otp_verification   # noqa: F401
 from alembic import context
 
 # this is the Alembic Config object, which provides
