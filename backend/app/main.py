@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from app.api.routes.chat import router as chat_router
 from app.api.routes.system import router as system_router
+from app.api.routes.citizen import router as citizen_router
 from app.core.config import settings
 
 
@@ -26,5 +27,10 @@ app.include_router(
 
 app.include_router(
     chat_router,
+    prefix=settings.API_V1_PREFIX,
+)
+
+app.include_router(
+    citizen_router,
     prefix=settings.API_V1_PREFIX,
 )
