@@ -34,3 +34,20 @@ def get_application_by_id(
             Application.id == application_id
         )
     )
+def get_all_applications(
+    db: Session,
+):
+    return list(
+        db.scalars(
+            select(Application)
+        )
+    )
+
+def update_application(
+    db: Session,
+    application: Application,
+):
+    db.commit()
+    db.refresh(application)
+
+    return application

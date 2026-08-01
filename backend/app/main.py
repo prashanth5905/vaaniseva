@@ -7,6 +7,7 @@ from app.api.routes import otp
 from app.api.routes.auth import router as auth_router
 from app.api.routes.profile import router as profile_router
 from app.api.routes.application import router as application_router
+from app.api.routes.admin import router as admin_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -52,5 +53,10 @@ app.include_router(
 
 app.include_router(
     application_router,
+    prefix=settings.API_V1_PREFIX,
+)
+
+app.include_router(
+    admin_router,
     prefix=settings.API_V1_PREFIX,
 )
