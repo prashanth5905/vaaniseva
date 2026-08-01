@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
+from app.schemas.auth import TokenResponse
 from app.db.dependencies import get_db
 from app.schemas.otp import (
     OTPRequest,
@@ -38,7 +38,7 @@ def request_citizen_otp(
         expires_in_seconds=300,
     )
 
-@router.post("/verify", response_model=OTPVerifyResponse)
+@router.post("/verify", response_model=TokenResponse)
 def verify_citizen_otp(
     data: OTPVerifyRequest,
     db: Session = Depends(get_db),
@@ -79,4 +79,6 @@ def verify_citizen_otp(
             detail="OTP already verified",
         )
 
-    return OTPVerifyResponse(status="verified")
+    return TokenResponse(
+        access_token=status,
+    )

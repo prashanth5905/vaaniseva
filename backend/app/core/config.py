@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
     OTP_SECRET_KEY: str
     DATABASE_URL: str
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
 
     model_config = SettingsConfigDict(
         env_file=".env",

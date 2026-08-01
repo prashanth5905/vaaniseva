@@ -13,3 +13,16 @@ def get_citizen_by_aadhaar(
     )
 
     return db.scalar(statement)
+
+from sqlalchemy import select
+
+
+def get_citizen_by_id(
+    db: Session,
+    citizen_id: int,
+) -> Citizen | None:
+    return db.scalar(
+        select(Citizen).where(
+            Citizen.id == citizen_id
+        )
+    )

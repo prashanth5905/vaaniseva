@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-
+from app.core.auth import create_access_token
 from sqlalchemy.orm import Session
 
 from app.core.security import generate_otp, hash_otp
@@ -66,4 +66,8 @@ def verify_otp(
     verification.verified = True
     save_otp_verification(db, verification)
 
-    return "verified"
+    token = create_access_token(
+        verification.citizen_id
+    )
+
+    return token

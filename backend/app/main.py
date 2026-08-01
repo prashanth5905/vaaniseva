@@ -1,16 +1,18 @@
 from fastapi import FastAPI
-
 from app.api.routes.chat import router as chat_router
 from app.api.routes.system import router as system_router
 from app.api.routes.citizen import router as citizen_router
 from app.core.config import settings
 from app.api.routes import otp
+from app.api.routes.auth import router as auth_router
+from app.api.routes.profile import router as profile_router
 
 app = FastAPI(
     title=settings.APP_NAME,
     description="Backend API for the VaaniSeva government service assistant.",
     version=settings.APP_VERSION,
 )
+
 
 
 @app.get("/")
@@ -36,3 +38,13 @@ app.include_router(
 )
 
 app.include_router(otp.router)
+
+app.include_router(
+    auth_router,
+    prefix=settings.API_V1_PREFIX,
+)
+
+app.include_router(
+    profile_router,
+    prefix=settings.API_V1_PREFIX,
+)
