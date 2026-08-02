@@ -22,3 +22,9 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     message: str
     response: str
+
+class ChatApplyResponse(BaseModel):
+    service_name: str
+    application_id: int
+    status: str
+    message: str
