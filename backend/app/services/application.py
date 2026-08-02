@@ -12,6 +12,9 @@ from app.repositories.application import (
     update_application,
 )
 
+from app.repositories.citizen import get_citizen_by_id
+from app.services.certificate import generate_certificate
+
 def submit_application(
     db,
     citizen_id: int,
@@ -73,6 +76,19 @@ def approve_application(
         return False
 
     application.status = "approved"
+
+    citizen = get_citizen_by_id(
+        db,
+        application.citizen_id,
+    )
+
+    filepath = generate_certificate(
+        application.id,
+        citizen.name,
+        application.service_name,
+    )
+
+    application.certificate_path = filepath
 
     return update_application(
         db,

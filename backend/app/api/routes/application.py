@@ -14,6 +14,7 @@ from app.services.application import (
     list_my_applications,
     get_my_application,
 )
+from fastapi.responses import FileResponse
 
 router = APIRouter(
     prefix="/applications",
@@ -93,4 +94,34 @@ def get_application(
         service_name=application.service_name,
         status=application.status,
         created_at=application.created_at,
+    )
+
+@router.get("/{application_id}/certificate")
+def download_certificate(
+    application_id: int,
+    citizen: Citizen = Depends(get_current_citizen),
+    db: Session = Depends(get_db),
+):
+    application = get_my_application(
+        db=db,
+        citizen_id=citizen.id,
+        application_id=application_id,
+    )
+
+    if application is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Application not found",
+        )
+
+    if application.certificate_path is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Certificate not available",
+        )
+
+    return FileResponse(
+        path=application.certificate_path,
+        filename=f"{application.service_name}.pdf",
+        media_type="application/pdf",
     )

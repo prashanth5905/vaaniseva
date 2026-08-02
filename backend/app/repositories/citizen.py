@@ -26,3 +26,12 @@ def get_citizen_by_id(
             Citizen.id == citizen_id
         )
     )
+
+def get_citizen_by_id(
+    db: Session,
+    citizen_id: int,
+):
+    return db.get(
+        Citizen,
+        citizen_id,
+    )
