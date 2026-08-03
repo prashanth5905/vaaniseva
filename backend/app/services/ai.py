@@ -109,3 +109,42 @@ def detect_service(message: str) -> str | None:
             return service
 
     return None
+
+def ask_ai_with_history(
+    history: list[tuple[str, str]],
+    message: str,
+) -> str:
+    conversation = ""
+
+    for role, content in history:
+        conversation += f"{role}: {content}\n"
+
+    conversation += f"User: {message}"
+
+    prompt = f"""
+You are VaaniSeva AI.
+
+You assist citizens with government services only.
+
+Continue the conversation naturally.
+
+Conversation History:
+
+{conversation}
+
+Answer the user's latest question.
+"""
+
+    try:
+        response = client.models.generate_content(
+            model="models/gemini-3.5-flash",
+            contents=prompt,
+        )
+
+        return response.text.strip()
+
+    except Exception:
+        return (
+            "I'm sorry, the VaaniSeva AI service is temporarily unavailable. "
+            "Please try again in a few minutes."
+        )
