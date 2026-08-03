@@ -8,7 +8,17 @@ from app.api.routes.auth import router as auth_router
 from app.api.routes.profile import router as profile_router
 from app.api.routes.application import router as application_router
 from app.api.routes.admin import router as admin_router
-
+from app.api.routes import (
+    admin,
+    application,
+    auth,
+    chat,
+    citizen,
+    document,
+    otp,
+    profile,
+    system,
+)
 app = FastAPI(
     title=settings.APP_NAME,
     description="Backend API for the VaaniSeva government service assistant.",
@@ -60,3 +70,5 @@ app.include_router(
     admin_router,
     prefix=settings.API_V1_PREFIX,
 )
+
+app.include_router(document.router, prefix="/api/v1")

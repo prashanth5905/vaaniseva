@@ -21,9 +21,11 @@ def chat_with_memory(
     )
 
     if session is None:
+        title = generate_chat_title(message)
         session = create_chat_session(
             db,
             citizen_id,
+            title,
         )
 
     messages = get_recent_messages(

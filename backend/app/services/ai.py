@@ -148,3 +148,80 @@ Answer the user's latest question.
             "I'm sorry, the VaaniSeva AI service is temporarily unavailable. "
             "Please try again in a few minutes."
         )
+
+from app.models.citizen import Citizen
+from sqlalchemy.orm import Session
+
+from app.services.context import build_citizen_context
+
+
+def ask_ai_with_context(
+    db: Session,
+    citizen: Citizen,
+    question: str,
+) -> str:
+
+    context = build_citizen_context(
+        db,
+        citizen,
+    )
+
+    prompt = f"""
+You are VaaniSeva AI.
+
+You are an AI assistant for a Government Service Portal.
+
+Below is the citizen's information.
+
+{context}
+
+Citizen Question:
+
+{question}
+
+Instructions:
+
+- Use the citizen information whenever relevant.
+- Answer naturally.
+- If the question is unrelated to government services,
+  politely refuse.
+"""
+
+    try:
+        response = client.models.generate_content(
+            model="models/gemini-3.5-flash",
+            contents=prompt,
+        )
+
+        return response.text.strip()
+
+    except Exception:
+        return (
+            "I'm sorry, the AI service is currently unavailable."
+        )
+
+def generate_chat_title(
+    message: str,
+) -> str:
+
+    prompt = f"""
+Generate a short title (maximum 5 words)
+for this government service conversation.
+
+Message:
+
+{message}
+
+Return ONLY the title.
+"""
+
+    try:
+        response = client.models.generate_content(
+            model="models/gemini-3.5-flash",
+            contents=prompt,
+        )
+
+        return response.text.strip()
+
+    except Exception:
+        return "New Chat"

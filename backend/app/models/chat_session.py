@@ -1,5 +1,7 @@
-from sqlalchemy import Column, Integer, ForeignKey, Text, DateTime
-from sqlalchemy.sql import func
+from datetime import datetime
+
+from sqlalchemy import DateTime, ForeignKey, String, func
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
 
@@ -7,21 +9,23 @@ from app.db.base import Base
 class ChatSession(Base):
     __tablename__ = "chat_sessions"
 
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(
+        primary_key=True,
+    )
 
-    citizen_id = Column(
-        Integer,
+    citizen_id: Mapped[int] = mapped_column(
         ForeignKey("citizens.id"),
         nullable=False,
     )
 
-    history = Column(
-        Text,
+    title: Mapped[str] = mapped_column(
+        String(100),
+        default="New Chat",
         nullable=False,
-        default="",
     )
 
-    created_at = Column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
+        nullable=False,
     )

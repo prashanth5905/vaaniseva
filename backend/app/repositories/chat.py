@@ -7,9 +7,11 @@ from app.models.chat_session import ChatSession
 def create_chat_session(
     db: Session,
     citizen_id: int,
+    title: str,
 ) -> ChatSession:
     session = ChatSession(
         citizen_id=citizen_id,
+        title=title,
     )
 
     db.add(session)
@@ -64,3 +66,33 @@ def get_recent_messages(
     )
 
     return list(reversed(messages))
+
+def get_chat_sessions(
+    db: Session,
+    citizen_id: int,
+):
+    return (
+        db.query(ChatSession)
+        .filter(
+            ChatSession.citizen_id == citizen_id
+        )
+        .order_by(
+            ChatSession.created_at.desc()
+        )
+        .all()
+    )
+
+def get_messages(
+    db: Session,
+    session_id: int,
+):
+    return (
+        db.query(ChatMessage)
+        .filter(
+            ChatMessage.session_id == session_id
+        )
+        .order_by(
+            ChatMessage.created_at.asc()
+        )
+        .all()
+    )
