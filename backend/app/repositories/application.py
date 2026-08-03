@@ -51,3 +51,53 @@ def update_application(
     db.refresh(application)
 
     return application
+
+def get_pending_applications(
+    db: Session,
+):
+    return (
+        db.query(Application)
+        .filter(
+            Application.status == "pending"
+        )
+        .order_by(
+            Application.created_at.desc()
+        )
+        .all()
+    )
+
+from app.models.application import Application
+
+
+def get_application_by_id(
+    db,
+    application_id: int,
+):
+    return (
+        db.query(Application)
+        .filter(Application.id == application_id)
+        .first()
+    )
+
+def approve_application(
+    db,
+    application,
+):
+    application.status = "approved"
+
+    db.commit()
+    db.refresh(application)
+
+    return application
+
+
+def reject_application(
+    db,
+    application,
+):
+    application.status = "rejected"
+
+    db.commit()
+    db.refresh(application)
+
+    return application

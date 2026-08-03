@@ -41,3 +41,13 @@ def get_document_by_id(
         )
         .first()
     )
+
+def get_documents_by_citizen_id(
+    db,
+    citizen_id: int,
+):
+    return (
+        db.query(Document)
+        .filter(Document.citizen_id == citizen_id)
+        .all()
+    )

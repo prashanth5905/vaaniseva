@@ -35,3 +35,16 @@ def get_citizen_by_id(
         Citizen,
         citizen_id,
     )
+
+from app.models.citizen import Citizen
+
+
+def get_citizen_by_id(
+    db,
+    citizen_id: int,
+):
+    return (
+        db.query(Citizen)
+        .filter(Citizen.id == citizen_id)
+        .first()
+    )
