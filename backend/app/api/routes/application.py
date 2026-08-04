@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import get_current_citizen
@@ -82,7 +82,7 @@ def get_application(
     )
 
     if application is None:
-        from fastapi import HTTPException
+        
 
         raise HTTPException(
             status_code=404,

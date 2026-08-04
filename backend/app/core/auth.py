@@ -26,6 +26,9 @@ def create_access_token(
 from jose import JWTError
 
 
+from jose import JWTError
+
+
 def decode_access_token(token: str):
     try:
         payload = jwt.decode(
@@ -36,5 +39,6 @@ def decode_access_token(token: str):
 
         return payload
 
-    except JWTError:
+    except JWTError as e:
+        print("JWT ERROR:", e)
         return None

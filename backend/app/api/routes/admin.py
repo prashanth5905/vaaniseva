@@ -17,7 +17,7 @@ from app.services.admin import get_application_details
 from app.services.admin import approve, reject
 from app.schemas.dashboard import DashboardResponse
 from app.services.dashboard import get_dashboard
-
+from app.services.certificate import generate_certificate
 router = APIRouter(
     prefix="/admin",
     tags=["Admin"],
@@ -140,9 +140,37 @@ def approve_route(
         application_id=application_id,
     )
 
+    if application is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Application not found",
+        )
+
+
+    # Generate certificate after approval
+    citizen = db.query(Citizen).filter(
+        Citizen.id == application.citizen_id
+    ).first()
+
+
+    certificate_path = generate_certificate(
+        application_id=application.id,
+        citizen_name=citizen.name,
+        service_name=application.service_name,
+    )
+
+
+    # Save certificate path
+    application.certificate_path = certificate_path
+
+    db.commit()
+    db.refresh(application)
+
+
     return {
-        "message": "Application approved.",
+        "message": "Application approved and certificate generated.",
         "status": application.status,
+        "certificate": application.certificate_path,
     }
 
 

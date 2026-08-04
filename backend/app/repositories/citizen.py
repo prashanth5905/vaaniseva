@@ -14,8 +14,6 @@ def get_citizen_by_aadhaar(
 
     return db.scalar(statement)
 
-from sqlalchemy import select
-
 
 def get_citizen_by_id(
     db: Session,
@@ -25,26 +23,4 @@ def get_citizen_by_id(
         select(Citizen).where(
             Citizen.id == citizen_id
         )
-    )
-
-def get_citizen_by_id(
-    db: Session,
-    citizen_id: int,
-):
-    return db.get(
-        Citizen,
-        citizen_id,
-    )
-
-from app.models.citizen import Citizen
-
-
-def get_citizen_by_id(
-    db,
-    citizen_id: int,
-):
-    return (
-        db.query(Citizen)
-        .filter(Citizen.id == citizen_id)
-        .first()
     )

@@ -19,6 +19,8 @@ from app.api.routes import (
     profile,
     system,
 )
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(
     title=settings.APP_NAME,
     description="Backend API for the VaaniSeva government service assistant.",
@@ -72,3 +74,13 @@ app.include_router(
 )
 
 app.include_router(document.router, prefix="/api/v1")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)

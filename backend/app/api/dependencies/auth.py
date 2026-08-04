@@ -13,11 +13,14 @@ def get_current_citizen(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
 ):
-    payload = decode_access_token(
-        credentials.credentials
-    )
+    print("TOKEN:", credentials.credentials)
+
+    payload = decode_access_token(credentials.credentials)
+
+    print("PAYLOAD:", payload)
 
     if payload is None:
+        print("JWT FAILED")
         raise HTTPException(
             status_code=401,
             detail="Invalid access token",
@@ -28,7 +31,10 @@ def get_current_citizen(
         int(payload["sub"]),
     )
 
+    print("CITIZEN:", citizen)
+
     if citizen is None:
+        print("Citizen not found")
         raise HTTPException(
             status_code=401,
             detail="Citizen not found",
