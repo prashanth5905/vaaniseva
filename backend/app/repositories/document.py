@@ -51,3 +51,13 @@ def get_documents_by_citizen_id(
         .filter(Document.citizen_id == citizen_id)
         .all()
     )
+
+def get_document_by_id(
+    db: Session,
+    document_id:int
+):
+
+    return db.get(
+        Document,
+        document_id
+    )

@@ -18,6 +18,8 @@ from app.services.document import (
     list_documents,
     upload_document,
 )
+from fastapi.responses import FileResponse
+from fastapi import HTTPException
 
 router = APIRouter(
     prefix="/documents",
@@ -54,4 +56,28 @@ def get_documents(
     return list_documents(
         db=db,
         citizen=citizen,
+    )
+
+@router.get("/{document_id}/download")
+def download_document(
+    document_id:int,
+    db:Session = Depends(get_db),
+):
+
+    document = get_document_by_id(
+        db,
+        document_id
+    )
+
+    if document is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found"
+        )
+
+
+    return FileResponse(
+        path=document.file_path,
+        filename=document.file_name,
+        media_type="application/pdf",
     )
