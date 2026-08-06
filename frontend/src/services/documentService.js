@@ -23,3 +23,14 @@ export async function uploadDocument(file, documentType) {
 
     return response.data;
 }
+
+export async function viewDocument(documentId) {
+    const response = await api.get(
+        `/documents/${documentId}/download`,
+        {
+            responseType: "blob",
+        }
+    );
+
+    return response.data;
+}

@@ -6,33 +6,47 @@ import {
     getApplication,
     downloadCertificate,
 } from "../../services/applicationService";
+import { getCitizenProfile } from "../../services/citizenService";
+import { getDocuments, viewDocument } from "../../services/documentService";
 
 export default function ApplicationDetails() {
 
     const { id } = useParams();
 
     const [application, setApplication] = useState(null);
+    const [citizen, setCitizen] = useState(null);
+    const [documents, setDocuments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         loadApplication();
-    }, []);
+    }, [id]);
 
     async function loadApplication() {
 
         try {
+            setLoading(true);
+            setError("");
 
-            const data = await getApplication(id);
+            const [applicationData, citizenData, documentsData] = await Promise.all([
+                getApplication(id),
+                getCitizenProfile(),
+                getDocuments(),
+            ]);
 
-            console.log(data);
-
-            setApplication(data);
+            setApplication(applicationData);
+            setCitizen(citizenData);
+            setDocuments(documentsData);
 
         } catch (error) {
-
-            alert(
+            setError(
                 error.response?.data?.detail ||
-                "Failed to load application."
+                "Failed to load application details."
             );
+
+        } finally {
+            setLoading(false);
 
         }
 
@@ -66,7 +80,23 @@ export default function ApplicationDetails() {
 
     }
 
-    if (!application) {
+    async function handleViewDocument(documentId) {
+        try {
+            const blob = await viewDocument(documentId);
+            const url = window.URL.createObjectURL(blob);
+
+            window.open(url, "_blank");
+
+            window.setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+        } catch (error) {
+            setError(
+                error.response?.data?.detail ||
+                "Unable to open document."
+            );
+        }
+    }
+
+    if (loading) {
 
         return (
             <>
@@ -78,6 +108,21 @@ export default function ApplicationDetails() {
         );
 
     }
+
+    if (error || !application || !citizen) {
+        return (
+            <>
+                <Navbar />
+                <div className="min-h-screen bg-slate-100 p-10">
+                    <div className="mx-auto max-w-3xl rounded-xl bg-white p-6 text-red-600 shadow">
+                        {error || "Application details are unavailable."}
+                    </div>
+                </div>
+            </>
+        );
+    }
+
+    const status = application.status.toUpperCase();
 
     return (
 
@@ -102,7 +147,7 @@ export default function ApplicationDetails() {
 
                             {" "}
 
-                            {application.status}
+                            {status}
 
                         </p>
 
@@ -122,13 +167,61 @@ export default function ApplicationDetails() {
 
                             {" "}
 
-                            {application.created_at}
+                            {new Date(application.created_at).toLocaleDateString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                            })}
 
                         </p>
 
                     </div>
 
-                    {application.status === "approved" && (
+                    <div className="mt-8 border-t pt-6">
+                        <h2 className="text-xl font-semibold text-slate-800">
+                            Citizen Details
+                        </h2>
+
+                        <div className="mt-4 space-y-3">
+                            <p><strong>Name:</strong> {citizen.name}</p>
+                            <p><strong>Aadhaar Number:</strong> {citizen.aadhaar_number}</p>
+                            <p><strong>Registered Phone:</strong> {citizen.registered_phone}</p>
+                            <p><strong>District:</strong> {citizen.district}</p>
+                        </div>
+                    </div>
+
+                    <div className="mt-8 border-t pt-6">
+                        <h2 className="text-xl font-semibold text-slate-800">
+                            Uploaded Documents
+                        </h2>
+
+                        <div className="mt-4 space-y-3">
+                            {documents.length === 0 ? (
+                                <p className="text-gray-500">No documents uploaded.</p>
+                            ) : (
+                                documents.map((document) => (
+                                    <div
+                                        key={document.id}
+                                        className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
+                                    >
+                                        <div>
+                                            <p><strong>Type:</strong> {document.document_type}</p>
+                                            <p><strong>File:</strong> {document.file_name}</p>
+                                        </div>
+
+                                        <button
+                                            onClick={() => handleViewDocument(document.id)}
+                                            className="bg-blue-600 px-4 py-2 text-white rounded"
+                                        >
+                                            View Document
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                    {status === "APPROVED" && (
 
                         <button
                             onClick={handleDownload}
@@ -137,6 +230,12 @@ export default function ApplicationDetails() {
                             Download Certificate
                         </button>
 
+                    )}
+
+                    {status === "REJECTED" && (
+                        <p className="mt-8 text-red-600">
+                            This application was rejected.
+                        </p>
                     )}
 
                 </div>

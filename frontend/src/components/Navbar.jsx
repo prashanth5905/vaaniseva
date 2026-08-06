@@ -15,9 +15,12 @@ export default function Navbar() {
 
             <div className="max-w-6xl mx-auto flex justify-between items-center px-6 py-4">
 
-                <h1 className="text-2xl font-bold">
+                <Link
+                    to="/dashboard"
+                    className="text-2xl font-bold"
+                >
                     VaaniSeva
-                </h1>
+                </Link>
 
                 <div className="space-x-6">
 
@@ -31,6 +34,10 @@ export default function Navbar() {
 
                     <Link to="/documents">
                         Documents
+                    </Link>
+
+                    <Link to="/applications">
+                        My Applications
                     </Link>
 
                     <button

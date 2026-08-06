@@ -5,6 +5,10 @@ import Dashboard from "./pages/dashboard/Dashboard";
 import ApplyService from "./pages/apply/ApplyService";
 import Documents from "./pages/documents/Documents";
 import ApplicationDetails from "./pages/application/ApplicationDetails";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import ApplicationReview from "./pages/admin/ApplicationReview";
+import MyApplications from "./pages/citizen/MyApplications";
+
 function App() {
 
     return (
@@ -35,6 +39,21 @@ function App() {
                 <Route
                     path="/applications/:id"
                     element={<ApplicationDetails />}
+                />
+
+                <Route
+                    path="/admin"
+                    element={<AdminDashboard/>}
+                />
+
+                <Route
+                    path="/admin/applications/:id"
+                    element={<ApplicationReview/>}
+                />
+
+                <Route
+                    path="/applications"
+                    element={<MyApplications/>}
                 />
 
             </Routes>

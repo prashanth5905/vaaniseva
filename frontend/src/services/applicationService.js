@@ -11,6 +11,11 @@ export async function createApplication(serviceName) {
     return response.data;
 }
 
+export async function getMyApplications() {
+    const response = await api.get("/applications");
+    return response.data;
+}
+
 export async function getApplication(id) {
     const response = await api.get(
         `/applications/${id}`

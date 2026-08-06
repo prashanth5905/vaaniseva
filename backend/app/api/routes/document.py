@@ -18,6 +18,7 @@ from app.services.document import (
     list_documents,
     upload_document,
 )
+from app.repositories.document import get_document_by_id
 from fastapi.responses import FileResponse
 from fastapi import HTTPException
 
@@ -79,5 +80,4 @@ def download_document(
     return FileResponse(
         path=document.file_path,
         filename=document.file_name,
-        media_type="application/pdf",
     )
