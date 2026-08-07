@@ -76,15 +76,29 @@ Document uploads and generated certificate files are stored by the backend and s
 
 ## 8. Screenshots
 
-Add project screenshots here when preparing the portfolio or deployment documentation.
+### Login and OTP Verification
 
-| Screen | Placeholder |
-| --- | --- |
-| Aadhaar OTP Login | `docs/screenshots/login.png` |
-| Citizen Chat Assistant | `docs/screenshots/chat.png` |
-| Certificate Application | `docs/screenshots/apply-service.png` |
-| My Applications | `docs/screenshots/my-applications.png` |
-| Admin Review Dashboard | `docs/screenshots/admin-dashboard.png` |
+![Login and OTP verification](docs/screenshots/login.png)
+
+### WhatsApp-style VaaniSeva Conversational Assistant
+
+![WhatsApp-style VaaniSeva conversational assistant](docs/screenshots/chat.png)
+
+### Certificate Application Flow
+
+![Certificate application flow](docs/screenshots/apply.png)
+
+### Application Tracking Page
+
+![Application tracking page](docs/screenshots/applications.png)
+
+### Admin Review Dashboard
+
+![Admin review dashboard](docs/screenshots/admin.png)
+
+### Approved Certificate Download
+
+![Approved certificate download](docs/screenshots/certificate.png)
 
 ## 9. API Overview
 

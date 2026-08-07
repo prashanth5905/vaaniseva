@@ -1,10 +1,14 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { createApplication } from "../../services/applicationService";
 
 
 export default function ApplyService() {
 
-    const [service, setService] = useState("");
+    const [searchParams] = useSearchParams();
+    const [service, setService] = useState(
+        () => searchParams.get("service") || ""
+    );
     const [loading, setLoading] = useState(false);
 
 

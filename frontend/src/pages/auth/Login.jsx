@@ -59,7 +59,7 @@ export default function Login() {
 
             alert("Login successful!");
 
-            window.location.href = "/dashboard";
+            window.location.href = "/chat";
 
         } catch (error) {
             alert(

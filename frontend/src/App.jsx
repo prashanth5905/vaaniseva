@@ -8,6 +8,7 @@ import ApplicationDetails from "./pages/application/ApplicationDetails";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ApplicationReview from "./pages/admin/ApplicationReview";
 import MyApplications from "./pages/citizen/MyApplications";
+import ChatPage from "./pages/chat/ChatPage";
 
 function App() {
 
@@ -24,6 +25,11 @@ function App() {
                 <Route 
                     path="/dashboard" 
                     element={<Dashboard />} 
+                />
+
+                <Route
+                    path="/chat"
+                    element={<ChatPage />}
                 />
 
                 <Route 
