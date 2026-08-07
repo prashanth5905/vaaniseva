@@ -9,6 +9,8 @@ from app.schemas.chat import ChatApplyResponse
 from app.services.ai import detect_service
 from app.services.application import submit_application
 from app.schemas.application import ApplicationCreateRequest
+from app.models.application import Application
+from sqlalchemy.orm import Session
 
 
 CERTIFICATE_SERVICES = (
@@ -46,7 +48,74 @@ def choose_reply(message: str, replies: tuple[str, ...]) -> str:
     return replies[sum(ord(character) for character in message) % len(replies)]
 
 
-def get_chatbot_reply(message: str) -> ChatbotResponse:
+def serialize_application(application: Application) -> dict[str, str]:
+    return {
+        "service_name": application.service_name,
+        "status": application.status,
+        "submitted_date": application.created_at.isoformat(),
+    }
+
+
+def get_application_reply(
+    normalized_message: str,
+    citizen: Citizen,
+    db: Session,
+) -> dict[str, object]:
+    applications = (
+        db.query(Application)
+        .filter(Application.citizen_id == citizen.id)
+        .order_by(Application.created_at.desc())
+        .all()
+    )
+
+    requested_status = next(
+        (
+            status
+            for status in ("pending", "approved", "rejected")
+            if status in normalized_message
+        ),
+        None,
+    )
+
+    if requested_status:
+        applications = [
+            application
+            for application in applications
+            if application.status.lower() == requested_status
+        ]
+
+    if "latest application" in normalized_message:
+        applications = applications[:1]
+
+    serialized_applications = [
+        serialize_application(application)
+        for application in applications
+    ]
+
+    if not serialized_applications:
+        if requested_status:
+            reply = f"You do not have any {requested_status} applications."
+        else:
+            reply = "You do not have any applications yet."
+    elif "latest application" in normalized_message:
+        reply = "Here is your latest application."
+    elif requested_status:
+        reply = f"Here are your {requested_status} applications."
+    else:
+        reply = "Here are your applications."
+
+    return {
+        "reply": reply,
+        "action": "applications",
+        "applications": serialized_applications,
+    }
+
+
+def get_chatbot_reply(
+    message: str,
+    citizen: Citizen | None = None,
+    db: Session | None = None,
+) -> ChatbotResponse | dict[str, object]:
     normalized_message = normalize_chat_message(message)
     words = set(normalized_message.split())
 
@@ -94,6 +163,13 @@ def get_chatbot_reply(message: str) -> ChatbotResponse:
             "my certificate",
         )
     ):
+        if citizen is not None and db is not None:
+            return get_application_reply(
+                normalized_message,
+                citizen,
+                db,
+            )
+
         return ChatbotResponse(
             reply=choose_reply(
                 normalized_message,
@@ -195,8 +271,6 @@ def process_message(request: ChatRequest) -> ChatResponse:
         message=request.message,
         response=ai_response,
     )
-
-from sqlalchemy.orm import Session
 
 def apply_using_ai(
     message: str,

@@ -30,11 +30,22 @@ router = APIRouter(
 
 @router.post(
     "",
-    response_model=ChatbotResponse,
-    response_model_exclude_none=True,
 )
-def chatbot(request: ChatRequest) -> ChatbotResponse:
-    return get_chatbot_reply(request.message)
+def chatbot(
+    request: ChatRequest,
+    citizen: Citizen = Depends(get_current_citizen),
+    db: Session = Depends(get_db),
+) -> dict:
+    response = get_chatbot_reply(
+        request.message,
+        citizen=citizen,
+        db=db,
+    )
+
+    if isinstance(response, ChatbotResponse):
+        return response.model_dump(exclude_none=True)
+
+    return response
 
 
 @router.post(

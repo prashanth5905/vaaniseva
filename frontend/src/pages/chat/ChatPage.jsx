@@ -36,7 +36,10 @@ export default function ChatPage() {
         return defaultMessages;
     });
     const [input, setInput] = useState("");
+    const [isListening, setIsListening] = useState(false);
+    const [voiceError, setVoiceError] = useState("");
     const messagesEndRef = useRef(null);
+    const speechRecognitionRef = useRef(null);
 
     useEffect(() => {
         localStorage.setItem(
@@ -47,7 +50,11 @@ export default function ChatPage() {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    function addBotMessage(text, action, quickActionOptions) {
+    useEffect(() => () => {
+        speechRecognitionRef.current?.abort();
+    }, []);
+
+    function addBotMessage(text, action, quickActionOptions, applications) {
         setMessages((currentMessages) => [
             ...currentMessages,
             {
@@ -56,6 +63,7 @@ export default function ChatPage() {
                 text,
                 action,
                 quickActions: quickActionOptions,
+                applications,
             },
         ]);
     }
@@ -116,6 +124,73 @@ export default function ChatPage() {
         return undefined;
     }
 
+    function formatSubmittedDate(submittedDate) {
+        const date = new Date(submittedDate);
+
+        if (Number.isNaN(date.getTime())) {
+            return submittedDate;
+        }
+
+        return date.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+        });
+    }
+
+    function formatStatus(status) {
+        return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+
+    function handleVoiceInput() {
+        if (isListening) {
+            speechRecognitionRef.current?.stop();
+            return;
+        }
+
+        const SpeechRecognition =
+            window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            setVoiceError("Voice input is not supported in this browser.");
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+
+        recognition.lang = "en-IN";
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+            setVoiceError("");
+            setIsListening(true);
+        };
+
+        recognition.onresult = (event) => {
+            setInput(event.results[event.resultIndex][0].transcript);
+        };
+
+        recognition.onerror = (event) => {
+            if (event.error !== "aborted") {
+                setVoiceError("Unable to recognize speech. Please try again.");
+            }
+        };
+
+        recognition.onend = () => {
+            setIsListening(false);
+        };
+
+        speechRecognitionRef.current = recognition;
+
+        try {
+            recognition.start();
+        } catch (error) {
+            setVoiceError("Unable to start voice input. Please try again.");
+            setIsListening(false);
+        }
+    }
+
     async function handleSend() {
         const text = input.trim();
 
@@ -140,7 +215,8 @@ export default function ChatPage() {
             addBotMessage(
                 botReply.reply,
                 getActionButton(botReply.action, botReply.service),
-                botReply.action === "help" ? quickActions : undefined
+                botReply.action === "help" ? quickActions : undefined,
+                botReply.applications
             );
         } catch (error) {
             addBotMessage(
@@ -178,6 +254,23 @@ export default function ChatPage() {
                             >
                                 {message.text}
 
+                                {message.applications?.map((application, index) => (
+                                    <div
+                                        key={`${application.service_name}-${application.submitted_date}-${index}`}
+                                        className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-base text-slate-800"
+                                    >
+                                        <p className="font-semibold">
+                                            {application.service_name}
+                                        </p>
+                                        <p className="mt-1">
+                                            Status: {formatStatus(application.status)}
+                                        </p>
+                                        <p>
+                                            Submitted: {formatSubmittedDate(application.submitted_date)}
+                                        </p>
+                                    </div>
+                                ))}
+
                                 {message.quickActions && (
                                     <div className="mt-4 grid gap-2">
                                         {message.quickActions.map((action) => (
@@ -213,13 +306,39 @@ export default function ChatPage() {
                     }}
                     className="flex shrink-0 gap-2 border-t bg-white p-3 sm:rounded-b-2xl"
                 >
-                    <input
-                        type="text"
-                        value={input}
-                        onChange={(event) => setInput(event.target.value)}
-                        placeholder="Type your message"
-                        className="min-w-0 flex-1 rounded-full border border-slate-300 px-4 py-3 text-lg outline-none focus:border-blue-600"
-                    />
+                    <div className="min-w-0 flex-1">
+                        <input
+                            type="text"
+                            value={input}
+                            onChange={(event) => setInput(event.target.value)}
+                            placeholder="Type your message"
+                            className="w-full rounded-full border border-slate-300 px-4 py-3 text-lg outline-none focus:border-blue-600"
+                        />
+
+                        {isListening && (
+                            <p className="mt-1 text-sm text-blue-600">
+                                Listening...
+                            </p>
+                        )}
+
+                        {voiceError && (
+                            <p className="mt-1 text-sm text-red-600">
+                                {voiceError}
+                            </p>
+                        )}
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleVoiceInput}
+                        aria-label={isListening ? "Stop voice input" : "Start voice input"}
+                        className={`rounded-full px-4 py-3 text-lg font-semibold text-white ${
+                            isListening
+                                ? "animate-pulse bg-red-500"
+                                : "bg-blue-600"
+                        }`}
+                    >
+                        🎤
+                    </button>
                     <button
                         type="submit"
                         className="rounded-full bg-blue-600 px-5 py-3 text-lg font-semibold text-white"
