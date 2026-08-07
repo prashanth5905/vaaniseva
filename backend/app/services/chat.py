@@ -1,3 +1,5 @@
+import re
+
 from app.schemas.chat import ChatRequest, ChatResponse, ChatbotResponse
 from app.services.ai import ask_ai
 from fastapi import HTTPException
@@ -16,9 +18,71 @@ CERTIFICATE_SERVICES = (
     "Community Certificate",
 )
 
+COMMON_MISSPELLINGS = {
+    "applicaton": "applications",
+    "aplication": "applications",
+    "applicatons": "applications",
+    "documnts": "documents",
+    "documnets": "documents",
+    "documentz": "documents",
+    "certficate": "certificate",
+    "certifcate": "certificate",
+    "aplly": "apply",
+    "aply": "apply",
+    "statuz": "status",
+}
+
+
+def normalize_chat_message(message: str) -> str:
+    words = re.findall(r"[a-z]+", message.lower())
+
+    return " ".join(
+        COMMON_MISSPELLINGS.get(word, word)
+        for word in words
+    )
+
+
+def choose_reply(message: str, replies: tuple[str, ...]) -> str:
+    return replies[sum(ord(character) for character in message) % len(replies)]
+
 
 def get_chatbot_reply(message: str) -> ChatbotResponse:
-    normalized_message = message.lower()
+    normalized_message = normalize_chat_message(message)
+    words = set(normalized_message.split())
+
+    if (
+        "good morning" in normalized_message
+        or "good afternoon" in normalized_message
+        or "good evening" in normalized_message
+        or words.intersection({"hi", "hello", "hey", "namaste"})
+    ):
+        greeting_replies = (
+            "Hello! 👋 How can I help you today?",
+            "Namaste! How can I assist you with government services today?",
+            "Welcome to VaaniSeva! What would you like help with today?",
+        )
+        return ChatbotResponse(
+            reply=choose_reply(normalized_message, greeting_replies),
+            action="help",
+        )
+
+    if (
+        "thank you" in normalized_message
+        or words.intersection({"thanks", "thankyou"})
+    ):
+        return ChatbotResponse(
+            reply="You're welcome! 😊 Let me know if you need any other help.",
+            action="help",
+        )
+
+    if (
+        "see you" in normalized_message
+        or words.intersection({"bye", "goodbye"})
+    ):
+        return ChatbotResponse(
+            reply="Thank you for using VaaniSeva. Have a great day!",
+            action="help",
+        )
 
     if any(
         keyword in normalized_message
@@ -31,7 +95,13 @@ def get_chatbot_reply(message: str) -> ChatbotResponse:
         )
     ):
         return ChatbotResponse(
-            reply="You can view your applications here.",
+            reply=choose_reply(
+                normalized_message,
+                (
+                    "You can view your applications here.",
+                    "Your application details and status are available here.",
+                ),
+            ),
             action="applications",
         )
 
@@ -46,7 +116,13 @@ def get_chatbot_reply(message: str) -> ChatbotResponse:
 
     if service:
         return ChatbotResponse(
-            reply=f"You can apply for {service}.",
+            reply=choose_reply(
+                normalized_message,
+                (
+                    f"You can apply for {service}.",
+                    f"I can help you start an application for {service}.",
+                ),
+            ),
             action="apply",
             service=service,
         )
@@ -57,12 +133,30 @@ def get_chatbot_reply(message: str) -> ChatbotResponse:
             action="select_certificate",
         )
 
+    if "apply" in words:
+        return ChatbotResponse(
+            reply=choose_reply(
+                normalized_message,
+                (
+                    "You can apply for a certificate here.",
+                    "Let us start your certificate application.",
+                ),
+            ),
+            action="apply",
+        )
+
     if any(
         keyword in normalized_message
         for keyword in ("document", "documents", "uploaded file", "files")
     ):
         return ChatbotResponse(
-            reply="You can view your documents here.",
+            reply=choose_reply(
+                normalized_message,
+                (
+                    "You can view your documents here.",
+                    "Your uploaded documents are available here.",
+                ),
+            ),
             action="documents",
         )
 
@@ -71,17 +165,25 @@ def get_chatbot_reply(message: str) -> ChatbotResponse:
         for keyword in ("help", "what can you do")
     ):
         return ChatbotResponse(
-            reply=(
-                "I can help you check applications, apply for certificates, "
-                "and view uploaded documents."
+            reply=choose_reply(
+                normalized_message,
+                (
+                    "I can help you check applications, apply for certificates, "
+                    "and view uploaded documents.",
+                    "I can guide you through certificates, applications, and documents.",
+                ),
             ),
             action="help",
         )
 
     return ChatbotResponse(
-        reply=(
-            "I am here to help you with certificates and applications. "
-            "Please ask me about applications, certificates, or documents."
+        reply=choose_reply(
+            normalized_message,
+            (
+                "I am here to help you with certificates and applications. "
+                "Please ask me about applications, certificates, or documents.",
+                "I can help with government certificates, application status, and documents.",
+            ),
         ),
         action="help",
     )
