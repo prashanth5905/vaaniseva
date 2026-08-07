@@ -23,6 +23,13 @@ class ChatResponse(BaseModel):
     message: str
     response: str
 
+
+class ChatbotResponse(BaseModel):
+    reply: str
+    action: str | None = None
+    service: str | None = None
+
+
 class ChatApplyResponse(BaseModel):
     service_name: str
     application_id: int

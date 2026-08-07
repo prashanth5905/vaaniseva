@@ -8,9 +8,10 @@ from app.services.smart_chat import smart_chat
 from app.schemas.chat import (
     ChatApplyResponse,
     ChatRequest,
+    ChatbotResponse,
     ChatResponse,
 )
-from app.services.chat import apply_using_ai
+from app.services.chat import apply_using_ai, get_chatbot_reply
 from app.schemas.chat_session import (
     ChatSessionResponse,
     ChatMessageResponse,
@@ -25,6 +26,15 @@ router = APIRouter(
     prefix="/chat",
     tags=["Chat"],
 )
+
+
+@router.post(
+    "",
+    response_model=ChatbotResponse,
+    response_model_exclude_none=True,
+)
+def chatbot(request: ChatRequest) -> ChatbotResponse:
+    return get_chatbot_reply(request.message)
 
 
 @router.post(

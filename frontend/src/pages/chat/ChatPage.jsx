@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { sendChatMessage } from "../../services/chatService";
 
 const quickActions = [
     "My Applications",
@@ -6,13 +7,6 @@ const quickActions = [
     "Documents",
     "Help",
 ];
-
-const certificateDocuments = {
-    "Income Certificate": ["Aadhaar Card", "Address Proof", "Income Proof"],
-    "Residence Certificate": ["Aadhaar Card", "Address Proof", "Residence Proof"],
-    "Birth Certificate": ["Aadhaar Card", "Birth Proof", "Address Proof"],
-    "Community Certificate": ["Aadhaar Card", "Address Proof", "Community Proof"],
-};
 
 const defaultMessages = [
     {
@@ -53,7 +47,7 @@ export default function ChatPage() {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    function addBotMessage(text, action, certificateOptions) {
+    function addBotMessage(text, action, quickActionOptions) {
         setMessages((currentMessages) => [
             ...currentMessages,
             {
@@ -61,7 +55,7 @@ export default function ChatPage() {
                 sender: "bot",
                 text,
                 action,
-                certificateOptions,
+                quickActions: quickActionOptions,
             },
         ]);
     }
@@ -95,98 +89,41 @@ export default function ChatPage() {
         addBotMessage("Please choose an option above to continue.");
     }
 
-    function getCertificateReply(certificateName) {
-        const documents = certificateDocuments[certificateName];
-        const article = certificateName === "Income Certificate" ? "an" : "a";
+    function getActionButton(action, service) {
+        if (action === "applications") {
+            return {
+                label: "Open My Applications",
+                path: "/applications",
+            };
+        }
 
-        return {
-            text: `Sure, I can help you apply for ${article} ${certificateName}.\n\nRequired documents:\n${documents.map((document) => `• ${document}`).join("\n")}\n\nWould you like to apply now?`,
-            action: {
-                label: `Apply for ${certificateName}`,
-                path: `/apply?service=${encodeURIComponent(certificateName)}`,
-            },
-        };
+        if (action === "documents") {
+            return {
+                label: "Open Documents",
+                path: "/documents",
+            };
+        }
+
+        if (action === "apply") {
+            return {
+                label: service ? `Apply for ${service}` : "Open Apply Page",
+                path: service
+                    ? `/apply?service=${encodeURIComponent(service)}`
+                    : "/apply",
+            };
+        }
+
+        return undefined;
     }
 
-    function handleCertificateSelection(certificateName) {
-        const botReply = getCertificateReply(certificateName);
-
-        addBotMessage(botReply.text, botReply.action);
-    }
-
-    function getBotReply(message) {
-        const normalizedMessage = message.toLowerCase();
-
-        if (["application", "applications", "status", "certificate status", "my certificate"].some(
-            (keyword) => normalizedMessage.includes(keyword)
-        )) {
-            return {
-                text: "You can check your applications here.",
-                action: {
-                    label: "Open My Applications",
-                    path: "/applications",
-                },
-            };
-        }
-
-        const certificateName = Object.keys(certificateDocuments).find(
-            (certificate) => normalizedMessage.includes(certificate.toLowerCase())
-        );
-
-        if (certificateName) {
-            return getCertificateReply(certificateName);
-        }
-
-        if (normalizedMessage.includes("certificate")) {
-            return {
-                text: "Which certificate do you need?",
-                certificateOptions: Object.keys(certificateDocuments),
-            };
-        }
-
-        if (normalizedMessage.includes("apply")) {
-            return {
-                text: "You can apply for a certificate here.",
-                action: {
-                    label: "Open Apply Page",
-                    path: "/apply",
-                },
-            };
-        }
-
-        if (["document", "documents", "uploaded file", "files"].some(
-            (keyword) => normalizedMessage.includes(keyword)
-        )) {
-            return {
-                text: "You can view your documents here.",
-                action: {
-                    label: "Open Documents",
-                    path: "/documents",
-                },
-            };
-        }
-
-        if (["help", "what can you do"].some(
-            (keyword) => normalizedMessage.includes(keyword)
-        )) {
-            return {
-                text: "I can help you check applications, apply for certificates, and view uploaded documents.",
-            };
-        }
-
-        return {
-            text: "I am here to help you with certificates and applications. Please ask me about applications, certificates, or documents.",
-        };
-    }
-
-    function handleSend() {
+    async function handleSend() {
         const text = input.trim();
 
         if (!text) {
             return;
         }
 
-        const botReply = getBotReply(text);
+        setInput("");
 
         setMessages((currentMessages) => [
             ...currentMessages,
@@ -195,15 +132,22 @@ export default function ChatPage() {
                 sender: "user",
                 text,
             },
-            {
-                id: Date.now() + 1,
-                sender: "bot",
-                text: botReply.text,
-                action: botReply.action,
-                certificateOptions: botReply.certificateOptions,
-            },
         ]);
-        setInput("");
+
+        try {
+            const botReply = await sendChatMessage(text);
+
+            addBotMessage(
+                botReply.reply,
+                getActionButton(botReply.action, botReply.service),
+                botReply.action === "help" ? quickActions : undefined
+            );
+        } catch (error) {
+            addBotMessage(
+                error.response?.data?.detail ||
+                "Unable to send your message. Please try again."
+            );
+        }
     }
 
     return (
@@ -255,20 +199,6 @@ export default function ChatPage() {
                                     >
                                         {message.action.label}
                                     </button>
-                                )}
-
-                                {message.certificateOptions && (
-                                    <div className="mt-4 grid gap-2">
-                                        {message.certificateOptions.map((certificateName) => (
-                                            <button
-                                                key={certificateName}
-                                                onClick={() => handleCertificateSelection(certificateName)}
-                                                className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-left text-base font-semibold text-blue-700"
-                                            >
-                                                {certificateName}
-                                            </button>
-                                        ))}
-                                    </div>
                                 )}
                             </div>
                         </div>
