@@ -9,6 +9,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import ApplicationReview from "./pages/admin/ApplicationReview";
 import MyApplications from "./pages/citizen/MyApplications";
 import ChatPage from "./pages/chat/ChatPage";
+import Phone from "./pages/Phone";
 
 function App() {
 
@@ -60,6 +61,10 @@ function App() {
                 <Route
                     path="/applications"
                     element={<MyApplications/>}
+                />
+                <Route
+                    path="/phone"
+                    element={<Phone />}
                 />
 
             </Routes>

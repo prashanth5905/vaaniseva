@@ -2,15 +2,21 @@ from datetime import datetime, timedelta, timezone
 from app.core.auth import create_access_token
 from sqlalchemy.orm import Session
 
-from app.core.security import generate_otp, hash_otp
-from app.repositories.citizen import get_citizen_by_aadhaar
-from app.repositories.otp import create_otp_verification
 from app.core.security import generate_otp, hash_otp, verify_otp_hash
+from app.repositories.citizen import get_citizen_by_aadhaar
 from app.repositories.otp import (
     create_otp_verification,
     get_otp_verification,
     save_otp_verification,
 )
+
+# Development helper: keep the latest generated OTP in memory so the frontend
+# can display it on the `/phone` page. This is intentionally simple and
+# non-persistent so it doesn't affect the verification flow or DB schema.
+LATEST_DEV_OTP: dict | None = None
+
+def get_latest_dev_otp() -> dict | None:
+    return LATEST_DEV_OTP
 
 def request_otp(
     db: Session,
@@ -32,10 +38,17 @@ def request_otp(
         expires_at=expires_at,
     )
 
-    # Development only — later replaced with SMS delivery.
-    print(f"[DEV OTP] {otp}")
+    # Store the plaintext OTP in-memory for the dev viewer page. This
+    # does NOT change the stored hash or verification logic — it only
+    # exposes the generated value for development/demo purposes.
+    global LATEST_DEV_OTP
+    LATEST_DEV_OTP = {
+        "verification_id": verification.id,
+        "otp": otp,
+        "expires_at": expires_at.isoformat(),
+    }
 
-    return verification,citizen
+    return verification, citizen
 
 def verify_otp(
     db: Session,

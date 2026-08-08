@@ -8,7 +8,7 @@ from app.schemas.otp import (
     OTPVerifyRequest,
     OTPVerifyResponse,
 )
-from app.services.otp import request_otp, verify_otp
+from app.services.otp import request_otp, verify_otp, get_latest_dev_otp
 
 
 router = APIRouter(
@@ -82,3 +82,16 @@ def verify_citizen_otp(
     return TokenResponse(
         access_token=status,
     )
+
+
+@router.get("/dev-latest")
+def get_dev_latest_otp():
+    latest = get_latest_dev_otp()
+
+    if latest is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No OTP generated yet",
+        )
+
+    return latest

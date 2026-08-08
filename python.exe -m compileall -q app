@@ -1,0 +1,87 @@
+warning: in the working copy of 'backend/app/services/chat.py', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/backend/app/services/chat.py b/backend/app/services/chat.py[m
+[1mindex 8d97755..57dcb97 100644[m
+[1m--- a/backend/app/services/chat.py[m
+[1m+++ b/backend/app/services/chat.py[m
+[36m@@ -13,12 +13,38 @@[m [mfrom app.models.application import Application[m
+ from sqlalchemy.orm import Session[m
+ [m
+ [m
+[31m-CERTIFICATE_SERVICES = ([m
+[31m-    "Income Certificate",[m
+[31m-    "Residence Certificate",[m
+[31m-    "Birth Certificate",[m
+[31m-    "Community Certificate",[m
+[31m-)[m
+[32m+[m[32mCERTIFICATE_INFORMATION = {[m
+[32m+[m[32m    "Income Certificate": {[m
+[32m+[m[32m        "required_documents": [[m
+[32m+[m[32m            "Aadhaar Card",[m
+[32m+[m[32m            "Income Proof",[m
+[32m+[m[32m            "Address Proof",[m
+[32m+[m[32m        ],[m
+[32m+[m[32m        "processing_time": "7 working days",[m
+[32m+[m[32m        "fee": "₹30",[m
+[32m+[m[32m    },[m
+[32m+[m[32m    "Residence Certificate": {[m
+[32m+[m[32m        "required_documents": [[m
+[32m+[m[32m            "Not available in the project",[m
+[32m+[m[32m        ],[m
+[32m+[m[32m        "processing_time": "Not available in the project",[m
+[32m+[m[32m        "fee": "Not available in the project",[m
+[32m+[m[32m    },[m
+[32m+[m[32m    "Birth Certificate": {[m
+[32m+[m[32m        "required_documents": [[m
+[32m+[m[32m            "Not available in the project",[m
+[32m+[m[32m        ],[m
+[32m+[m[32m        "processing_time": "Not available in the project",[m
+[32m+[m[32m        "fee": "Not available in the project",[m
+[32m+[m[32m    },[m
+[32m+[m[32m    "Community Certificate": {[m
+[32m+[m[32m        "required_documents": [[m
+[32m+[m[32m            "Not available in the project",[m
+[32m+[m[32m        ],[m
+[32m+[m[32m        "processing_time": "Not available in the project",[m
+[32m+[m[32m        "fee": "Not available in the project",[m
+[32m+[m[32m    },[m
+[32m+[m[32m}[m
+ [m
+ COMMON_MISSPELLINGS = {[m
+     "applicaton": "applications",[m
+[36m@@ -184,24 +210,24 @@[m [mdef get_chatbot_reply([m
+     service = next([m
+         ([m
+             certificate[m
+[31m-            for certificate in CERTIFICATE_SERVICES[m
+[32m+[m[32m            for certificate in CERTIFICATE_INFORMATION[m
+             if certificate.lower() in normalized_message[m
+         ),[m
+         None,[m
+     )[m
+ [m
+     if service:[m
+[31m-        return ChatbotResponse([m
+[31m-            reply=choose_reply([m
+[31m-                normalized_message,[m
+[31m-                ([m
+[31m-                    f"You can apply for {service}.",[m
+[31m-                    f"I can help you start an application for {service}.",[m
+[31m-                ),[m
+[31m-            ),[m
+[31m-            action="apply",[m
+[31m-            service=service,[m
+[31m-        )[m
+[32m+[m[32m        certificate_information = CERTIFICATE_INFORMATION[service][m
+[32m+[m[32m        article = "an" if service == "Income Certificate" else "a"[m
+[32m+[m
+[32m+[m[32m        return {[m
+[32m+[m[32m            "reply": f"You can apply for {article} {service}.",[m
+[32m+[m[32m            "required_documents": certificate_information["required_documents"],[m
+[32m+[m[32m            "processing_time": certificate_information["processing_time"],[m
+[32m+[m[32m            "fee": certificate_information["fee"],[m
+[32m+[m[32m            "action": "apply",[m
+[32m+[m[32m            "service": service,[m
+[32m+[m[32m        }[m
+ [m
+     if "certificate" in normalized_message:[m
+         return ChatbotResponse([m

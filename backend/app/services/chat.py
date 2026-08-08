@@ -13,12 +13,38 @@ from app.models.application import Application
 from sqlalchemy.orm import Session
 
 
-CERTIFICATE_SERVICES = (
-    "Income Certificate",
-    "Residence Certificate",
-    "Birth Certificate",
-    "Community Certificate",
-)
+CERTIFICATE_INFORMATION = {
+    "Income Certificate": {
+        "required_documents": [
+            "Aadhaar Card",
+            "Income Proof",
+            "Address Proof",
+        ],
+        "processing_time": "7 working days",
+        "fee": "₹30",
+    },
+    "Residence Certificate": {
+        "required_documents": [
+            "Not available in the project",
+        ],
+        "processing_time": "Not available in the project",
+        "fee": "Not available in the project",
+    },
+    "Birth Certificate": {
+        "required_documents": [
+            "Not available in the project",
+        ],
+        "processing_time": "Not available in the project",
+        "fee": "Not available in the project",
+    },
+    "Community Certificate": {
+        "required_documents": [
+            "Not available in the project",
+        ],
+        "processing_time": "Not available in the project",
+        "fee": "Not available in the project",
+    },
+}
 
 COMMON_MISSPELLINGS = {
     "applicaton": "applications",
@@ -184,24 +210,24 @@ def get_chatbot_reply(
     service = next(
         (
             certificate
-            for certificate in CERTIFICATE_SERVICES
+            for certificate in CERTIFICATE_INFORMATION
             if certificate.lower() in normalized_message
         ),
         None,
     )
 
     if service:
-        return ChatbotResponse(
-            reply=choose_reply(
-                normalized_message,
-                (
-                    f"You can apply for {service}.",
-                    f"I can help you start an application for {service}.",
-                ),
-            ),
-            action="apply",
-            service=service,
-        )
+        certificate_information = CERTIFICATE_INFORMATION[service]
+        article = "an" if service == "Income Certificate" else "a"
+
+        return {
+            "reply": f"You can apply for {article} {service}.",
+            "required_documents": certificate_information["required_documents"],
+            "processing_time": certificate_information["processing_time"],
+            "fee": certificate_information["fee"],
+            "action": "apply",
+            "service": service,
+        }
 
     if "certificate" in normalized_message:
         return ChatbotResponse(
