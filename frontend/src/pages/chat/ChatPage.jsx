@@ -37,9 +37,12 @@ export default function ChatPage() {
     });
     const [input, setInput] = useState("");
     const [isListening, setIsListening] = useState(false);
+    const [isSending, setIsSending] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [voiceError, setVoiceError] = useState("");
     const messagesEndRef = useRef(null);
     const speechRecognitionRef = useRef(null);
+    const menuRef = useRef(null);
 
     useEffect(() => {
         localStorage.setItem(
@@ -191,14 +194,39 @@ export default function ChatPage() {
         }
     }
 
+    function clearChat() {
+        localStorage.removeItem("vaaniseva_chat_history");
+        setMessages(defaultMessages);
+        setIsMenuOpen(false);
+    }
+
+    function toggleMenu() {
+        setIsMenuOpen((current) => !current);
+    }
+
+    function handleClickOutside(event) {
+        if (menuRef.current && !menuRef.current.contains(event.target)) {
+            setIsMenuOpen(false);
+        }
+    }
+
+    useEffect(() => {
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
     async function handleSend() {
         const text = input.trim();
 
-        if (!text) {
+        if (!text || isSending) {
             return;
         }
 
         setInput("");
+        setIsSending(true);
 
         setMessages((currentMessages) => [
             ...currentMessages,
@@ -223,19 +251,44 @@ export default function ChatPage() {
                 error.response?.data?.detail ||
                 "Unable to send your message. Please try again."
             );
+        } finally {
+            setIsSending(false);
         }
     }
 
     return (
         <div className="h-dvh overflow-hidden bg-slate-100 px-0 py-0 sm:p-6">
             <div className="mx-auto flex h-full w-full max-w-md flex-col bg-white shadow-lg sm:rounded-2xl">
-                <header className="flex shrink-0 items-center gap-3 bg-blue-600 px-5 py-4 text-white sm:rounded-t-2xl">
+                <header className="relative flex shrink-0 items-center gap-3 bg-blue-600 px-5 py-4 text-white sm:rounded-t-2xl">
                     <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl font-bold text-blue-600">
                         V
                     </div>
                     <div>
                         <h1 className="text-xl font-bold">VaaniSeva</h1>
                         <p className="text-sm text-blue-100">Your service assistant</p>
+                    </div>
+
+                    <div className="ml-auto relative" ref={menuRef}>
+                        <button
+                            type="button"
+                            aria-label="Chat options"
+                            onClick={toggleMenu}
+                            className="rounded-full p-2 text-white transition hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-white"
+                        >
+                            ⋮
+                        </button>
+                        {isMenuOpen && (
+                            <div className="absolute right-0 top-full mt-2 w-44 rounded-xl bg-white shadow-lg ring-1 ring-slate-200">
+                                <button
+                                    type="button"
+                                    onClick={clearChat}
+                                    disabled={isSending}
+                                    className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-slate-900 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400"
+                                >
+                                    Clear Chat
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </header>
 
@@ -296,6 +349,13 @@ export default function ChatPage() {
                             </div>
                         </div>
                     ))}
+                    {isSending && (
+                        <div className="flex justify-start">
+                            <div className="max-w-[60%] rounded-2xl rounded-bl-sm bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
+                                VaaniSeva is typing...
+                            </div>
+                        </div>
+                    )}
                     <div ref={messagesEndRef} />
                 </main>
 
@@ -341,9 +401,10 @@ export default function ChatPage() {
                     </button>
                     <button
                         type="submit"
-                        className="rounded-full bg-blue-600 px-5 py-3 text-lg font-semibold text-white"
+                        disabled={isSending}
+                        className="rounded-full bg-blue-600 px-5 py-3 text-lg font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
                     >
-                        Send
+                        {isSending ? "Sending..." : "Send"}
                     </button>
                 </form>
             </div>
