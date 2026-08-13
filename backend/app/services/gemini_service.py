@@ -21,8 +21,12 @@ Rules:
 """
 
 LANGUAGE_INSTRUCTION = (
-    "Respond in the same language as the user. If the user writes in Telugu, "
-    "respond in Telugu. If the user writes in English, respond in English."
+    "Respond in the same language as the user. "
+    "If the user writes in English, respond in English. "
+    "If the user writes in Telugu, respond in Telugu. "
+    "If the user writes in Hindi, respond in Hindi. "
+    "If the user writes in Kannada, respond in Kannada. "
+    "Do not translate the response into English unless the user asks for a translation."
 )
 
 
