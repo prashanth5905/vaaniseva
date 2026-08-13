@@ -61,8 +61,30 @@ COMMON_MISSPELLINGS = {
     "statuz": "status",
 }
 
+TELUGU_DOCUMENT_ACTION_WORDS = {
+    "పత్రం",
+    "పత్రాలు",
+    "పత్రాల",
+    "చూపించు",
+    "చూడండి",
+    "వివరాలు",
+    "వెతుక్కుంటే",
+}
+
+TELUGU_GREETINGS = {"నమస్కారం", "హలో", "హాయ్", "వందనం", "నమస్తే"}
+
+
+def detect_language(message: str) -> str:
+    if any("\u0C00" <= character <= "\u0C7F" for character in message):
+        return "te"
+    return "en"
+
 
 def normalize_chat_message(message: str) -> str:
+    if detect_language(message) == "te":
+        words = re.findall(r"[\u0C00-\u0C7F]+", message)
+        return " ".join(words)
+
     words = re.findall(r"[a-z]+", message.lower())
 
     return " ".join(
@@ -76,6 +98,13 @@ def choose_reply(message: str, replies: tuple[str, ...]) -> str:
 
 
 def is_document_action_request(normalized_message: str) -> bool:
+    if detect_language(normalized_message) == "te":
+        words = set(normalized_message.split())
+        return bool(words.intersection(TELUGU_DOCUMENT_ACTION_WORDS)) and any(
+            keyword in normalized_message
+            for keyword in ("చూపించు", "చూడండి", "వెతుక్కుంటే", "వెతుకుతాను", "పత్రాలు")
+        )
+
     if not any(
         keyword in normalized_message
         for keyword in (
@@ -180,6 +209,19 @@ def get_chatbot_reply(
 ) -> ChatbotResponse | dict[str, object]:
     normalized_message = normalize_chat_message(message)
     words = set(normalized_message.split())
+    language = detect_language(message)
+
+    if language == "te":
+        if words.intersection(TELUGU_GREETINGS):
+            greeting_replies = (
+                "నమస్కారం! నేను మీకు సహాయం చేయగలను.",
+                "హలో! మీకు నేను ఎలా సహాయం చేయగలను?",
+                "వెల్కం! మీరు ఏమి చేయాలనుకుంటున్నారు?",
+            )
+            return ChatbotResponse(
+                reply=choose_reply(normalized_message, greeting_replies),
+                action="help",
+            )
 
     if (
         "good morning" in normalized_message
@@ -284,6 +326,18 @@ def get_chatbot_reply(
         )
 
     if is_document_action_request(normalized_message):
+        if language == "te":
+            return ChatbotResponse(
+                reply=choose_reply(
+                    normalized_message,
+                    (
+                        "మీ పత్రాలను ఇక్కడ చూడవచ్చు.",
+                        "మీ అప్లోడ్ చేసిన పత్రాలు ఇక్కడ ఉన్నాయి.",
+                    ),
+                ),
+                action="documents",
+            )
+
         return ChatbotResponse(
             reply=choose_reply(
                 normalized_message,

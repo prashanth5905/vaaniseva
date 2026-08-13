@@ -2,10 +2,17 @@ import unittest
 from unittest.mock import patch
 
 from app.services import gemini_service
-from app.services.chat import get_chatbot_reply
+from app.services.chat import detect_language, get_chatbot_reply
 
 
 class GeminiServiceTests(unittest.TestCase):
+    def test_detect_language(self):
+        self.assertEqual(detect_language("Hello"), "en")
+        self.assertEqual(detect_language("What is a birth certificate?"), "en")
+        self.assertEqual(detect_language("నమస్కారం"), "te")
+        self.assertEqual(detect_language("నా పత్రాలను చూపించు"), "te")
+        self.assertEqual(detect_language("కుల ధృవీకరణ పత్రం ఎలా పొందాలి?"), "te")
+
     @patch.object(gemini_service.settings, "GEMINI_API_KEY", None)
     def test_returns_none_without_api_key(self):
         self.assertIsNone(gemini_service.generate_gemini_response("Hello"))
@@ -24,7 +31,7 @@ class GeminiServiceTests(unittest.TestCase):
         self.assertEqual(kwargs["model"], "models/gemini-flash-latest")
         self.assertEqual(kwargs["contents"], "Hello")
         self.assertIsInstance(kwargs["config"], gemini_service.types.GenerateContentConfig)
-        self.assertEqual(kwargs["config"].system_instruction, gemini_service.SYSTEM_PROMPT)
+        self.assertIn("Respond in the same language as the user", kwargs["config"].system_instruction)
 
     @patch.object(gemini_service.settings, "GEMINI_API_KEY", "test-key")
     @patch("app.services.gemini_service.genai.Client")
@@ -40,11 +47,12 @@ class GeminiServiceTests(unittest.TestCase):
             "View my documents",
             "Show my uploaded documents",
             "Where can I find my documents?",
+            "నా పత్రాలను చూపించు",
         ):
             response = get_chatbot_reply(message)
             self.assertEqual(response.action, "documents")
 
-    @patch("app.services.chat.generate_gemini_response", return_value="Digital copies help citizens access records quickly.")
+    @patch("app.services.chat.generate_gemini_response", return_value="డిజిటల్ పత్రాలు ఉపయోగకరంగా ఉంటాయి.")
     def test_informational_document_questions_fall_through_to_gemini(self, _mock_gemini):
         for message in (
             "Explain why keeping digital government documents is useful.",
@@ -52,10 +60,15 @@ class GeminiServiceTests(unittest.TestCase):
             "What are the benefits of digital government documents?",
             "Why is it useful to keep government documents digitally?",
             "Explain the importance of keeping digital documents.",
+            "డిజిటల్ ప్రభుత్వ పత్రాలను ఉంచుకోవడం ఎందుకు ఉపయోగకరం?",
         ):
             response = get_chatbot_reply(message)
             self.assertEqual(response.action, "help")
-            self.assertEqual(response.reply, "Digital copies help citizens access records quickly.")
+            self.assertEqual(response.reply, "డిజిటల్ పత్రాలు ఉపయోగకరంగా ఉంటాయి.")
+
+    def test_existing_english_chatbot_behavior_is_unchanged(self):
+        response = get_chatbot_reply("Hello")
+        self.assertEqual(response.action, "help")
 
 
 if __name__ == "__main__":

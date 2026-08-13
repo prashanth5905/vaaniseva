@@ -20,6 +20,15 @@ Rules:
 - Keep answers short, helpful, and clear.
 """
 
+LANGUAGE_INSTRUCTION = (
+    "Respond in the same language as the user. If the user writes in Telugu, "
+    "respond in Telugu. If the user writes in English, respond in English."
+)
+
+
+def build_system_instruction() -> str:
+    return f"{SYSTEM_PROMPT}\n\n{LANGUAGE_INSTRUCTION}"
+
 
 def generate_gemini_response(message: str) -> str | None:
     if not settings.GEMINI_API_KEY:
@@ -31,7 +40,7 @@ def generate_gemini_response(message: str) -> str | None:
         response = client.models.generate_content(
             model="models/gemini-flash-latest",
             contents=message,
-            config=types.GenerateContentConfig(system_instruction=SYSTEM_PROMPT),
+            config=types.GenerateContentConfig(system_instruction=build_system_instruction()),
         )
         return response.text.strip() if getattr(response, "text", None) else None
     except Exception as exc:
