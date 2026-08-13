@@ -2,6 +2,7 @@ import re
 
 from app.schemas.chat import ChatRequest, ChatResponse, ChatbotResponse
 from app.services.ai import ask_ai
+from app.services.gemini_service import generate_gemini_response
 from fastapi import HTTPException
 
 from app.models.citizen import Citizen
@@ -72,6 +73,41 @@ def normalize_chat_message(message: str) -> str:
 
 def choose_reply(message: str, replies: tuple[str, ...]) -> str:
     return replies[sum(ord(character) for character in message) % len(replies)]
+
+
+def is_document_action_request(normalized_message: str) -> bool:
+    if not any(
+        keyword in normalized_message
+        for keyword in (
+            "document",
+            "documents",
+            "uploaded file",
+            "files",
+        )
+    ):
+        return False
+
+    if any(
+        phrase in normalized_message
+        for phrase in (
+            "show my documents",
+            "view my documents",
+            "open my documents",
+            "show my uploaded documents",
+            "view my uploaded documents",
+            "open my uploaded documents",
+            "where can i find my documents",
+            "where can i find my uploaded documents",
+        )
+    ):
+        return True
+
+    action_words = {"show", "view", "open", "find", "access", "check", "see", "display"}
+    words = set(normalized_message.split())
+    if words.intersection(action_words):
+        return True
+
+    return "where can i find" in normalized_message
 
 
 def serialize_application(application: Application) -> dict[str, str]:
@@ -247,10 +283,7 @@ def get_chatbot_reply(
             action="apply",
         )
 
-    if any(
-        keyword in normalized_message
-        for keyword in ("document", "documents", "uploaded file", "files")
-    ):
+    if is_document_action_request(normalized_message):
         return ChatbotResponse(
             reply=choose_reply(
                 normalized_message,
@@ -278,15 +311,25 @@ def get_chatbot_reply(
             action="help",
         )
 
-    return ChatbotResponse(
-        reply=choose_reply(
-            normalized_message,
-            (
-                "I am here to help you with certificates and applications. "
-                "Please ask me about applications, certificates, or documents.",
-                "I can help with government certificates, application status, and documents.",
-            ),
+    fallback_reply = choose_reply(
+        normalized_message,
+        (
+            "I am here to help you with certificates and applications. "
+            "Please ask me about applications, certificates, or documents.",
+            "I can help with government certificates, application status, and documents.",
         ),
+    )
+
+    gemini_reply = generate_gemini_response(message)
+
+    if gemini_reply:
+        return ChatbotResponse(
+            reply=gemini_reply,
+            action="help",
+        )
+
+    return ChatbotResponse(
+        reply=fallback_reply,
         action="help",
     )
 
