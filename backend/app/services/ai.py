@@ -32,7 +32,7 @@ politely explain that you only answer VaaniSeva related questions.
 def ask_ai(message: str) -> str:
     try:
         response = client.models.generate_content(
-            model="models/gemini-3.5-flash",
+            model="models/gemini-3.5-flash-lite",
             contents=[
                 f"""
             You are VaaniSeva AI, an intelligent Government Services Assistant.
@@ -137,7 +137,7 @@ Answer the user's latest question.
 
     try:
         response = client.models.generate_content(
-            model="models/gemini-3.5-flash",
+            model="models/gemini-3.5-flash-lite",
             contents=prompt,
         )
 
@@ -189,7 +189,7 @@ Instructions:
 
     try:
         response = client.models.generate_content(
-            model="models/gemini-3.5-flash",
+            model="models/gemini-3.5-flash-lite",
             contents=prompt,
         )
 
@@ -217,7 +217,7 @@ Return ONLY the title.
 
     try:
         response = client.models.generate_content(
-            model="models/gemini-3.5-flash",
+            model="models/gemini-3.5-flash-lite",
             contents=prompt,
         )
 

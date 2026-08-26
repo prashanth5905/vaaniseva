@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from app.api.routes.chat import router as chat_router
 from app.api.routes.system import router as system_router
@@ -80,6 +81,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://localhost:5174",
+        os.getenv("FRONTEND_URL", ""),
     ],
     allow_credentials=True,
     allow_methods=["*"],
