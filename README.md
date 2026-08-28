@@ -1,127 +1,217 @@
-# VaaniSeva — Conversational Citizen Service Assistant
+# VaaniSeva
 
-VaaniSeva is a digital citizen-service assistant that simplifies government certificate applications through a familiar WhatsApp-style chat experience. It is designed to make essential public services easier to access for citizens with limited technical knowledge.
+VaaniSeva is a conversational citizen-service portal for discovering government certificate services, submitting applications, uploading documents, and tracking application status. It combines a React frontend with a FastAPI backend and a PostgreSQL database.
 
-## 1. Project Overview
+> This is a demonstration project. It does not connect to real Aadhaar records or production government systems.
 
-VaaniSeva combines a React-based citizen portal with a FastAPI backend to support secure login, certificate applications, document handling, application tracking, and administrative review. The conversational interface guides citizens toward the right service using clear language and action-oriented buttons.
+## Features
 
-## 2. Problem Statement
+- Aadhaar-number lookup and OTP-based sign-in
+- JWT-authenticated citizen sessions
+- Conversational assistant for service guidance
+- Income, Residence, Birth, and Community certificate applications
+- Document upload and document listing
+- Application status tracking
+- Officer dashboard for approving or rejecting applications
+- Generated certificate downloads for approved applications
+- Persistent chat sessions and message history
 
-Government-service portals can be difficult to navigate for first-time and less technically confident users. Citizens often need to understand which certificate to choose, what documents are required, and where to track their application. These multi-step processes can create friction and reduce access to essential services.
-
-## 3. Solution
-
-VaaniSeva provides a guided, mobile-friendly service journey. Citizens authenticate with Aadhaar-based OTP verification, use a simple chat assistant to explore services, receive certificate-specific document guidance, and are directed to relevant application, document, and tracking screens. Administrative users can review applications, approve or reject requests, and enable certificate downloads.
-
-## 4. Features
-
-- Aadhaar-based login with OTP verification
-- Citizen profile access and management
-- WhatsApp-style conversational chat interface
-- Guided certificate selection and document guidance
-- Applications for Income, Residence, Birth, and Community certificates
-- Document upload and secure document viewing
-- Citizen application tracking and status visibility
-- Admin review dashboard for application processing
-- Application approval and rejection workflow
-- Generated certificate download for approved applications
-- Persistent client-side chat history for a continuous conversation experience
-
-## 5. System Architecture
+## Architecture
 
 ```text
-┌───────────────────────────────────────────────────────────┐
-│ React + Vite + Tailwind CSS                                │
-│ Citizen portal, chat assistant, applications, documents,   │
-│ and admin dashboard                                        │
-└──────────────────────────┬────────────────────────────────┘
-                           │ HTTP / JSON
-                           ▼
-┌───────────────────────────────────────────────────────────┐
-│ FastAPI Backend                                            │
-│ OTP authentication, citizen profile, applications,         │
-│ documents, certificates, chat, and admin workflows         │
-└──────────────────────────┬────────────────────────────────┘
-                           │ SQLAlchemy ORM
-                           ▼
-┌───────────────────────────────────────────────────────────┐
-│ PostgreSQL                                                 │
-│ Citizens, OTP records, applications, documents, chat data, │
-│ and certificate metadata                                   │
-└───────────────────────────────────────────────────────────┘
+React + Vite + Tailwind CSS
+          |
+          | HTTP / JSON
+          v
+FastAPI + Pydantic + SQLAlchemy
+          |
+          v
+PostgreSQL
 ```
 
-Document uploads and generated certificate files are stored by the backend and served through authenticated application workflows.
+The backend also uses Alembic for database migrations, ReportLab for certificate generation, and Google Gemini for AI-assisted chat responses. Uploaded documents and generated certificates are stored in the backend filesystem during local development.
 
-## 6. Tech Stack
+## Tech Stack
 
-| Layer | Technologies |
+| Area | Technologies |
 | --- | --- |
-| Frontend | React, Vite, React Router, Tailwind CSS, Axios |
-| Backend | FastAPI, Pydantic, Uvicorn |
-| Database | PostgreSQL, SQLAlchemy, Alembic |
-| Authentication | Aadhaar-based OTP flow and JWT access tokens |
-| File Handling | FastAPI uploads and file responses |
+| Frontend | React 19, Vite, React Router, Tailwind CSS, Axios, Lucide React |
+| Backend | FastAPI, Pydantic Settings, Uvicorn |
+| Persistence | PostgreSQL, SQLAlchemy, Alembic |
+| Authentication | OTP verification and JWT bearer tokens |
+| AI | Google Gemini API |
+| Files | Multipart uploads, local storage, ReportLab-generated PDFs |
 
-## 7. Application Workflow
+## Project Structure
 
-1. A citizen enters an Aadhaar number and requests an OTP.
-2. After OTP verification, the backend issues an access token and the citizen enters the chat assistant.
-3. The assistant helps the citizen find applications, upload/view documents, or select a certificate.
-4. For a selected certificate, the assistant presents the required documents and opens the preselected application form.
-5. The citizen submits the application and can monitor its status in **My Applications**.
-6. An administrator reviews the request and approves or rejects it.
-7. For approved requests, the citizen can download the generated certificate.
+```text
+vaaniseva/
+├── backend/
+│   ├── app/
+│   │   ├── api/routes/       # HTTP endpoints
+│   │   ├── core/             # Settings and security
+│   │   ├── models/           # SQLAlchemy models
+│   │   ├── repositories/     # Database access
+│   │   ├── schemas/          # Pydantic request/response models
+│   │   └── services/         # Application, chat, OTP, and certificate logic
+│   ├── alembic/              # Database migrations
+│   ├── certificates/         # Generated certificate files
+│   ├── uploads/documents/    # Uploaded documents
+│   └── tests/
+├── docs/screenshots/         # README screenshots
+└── frontend/src/
+    ├── api/                  # Axios client
+    ├── components/           # Shared UI components
+    ├── layouts/              # Citizen, officer, and auth layouts
+    ├── pages/                # Application screens
+    └── services/             # Frontend API services
+```
 
-## 8. Screenshots
+## Requirements
 
-### Login and OTP Verification
+- Python 3.13 or a compatible recent Python version
+- Node.js and npm
+- PostgreSQL
+- A Google Gemini API key for AI-assisted chat
 
-![Login and OTP verification](docs/screenshots/login.png)
+## Configuration
 
-### WhatsApp-style VaaniSeva Conversational Assistant
+Create `backend/.env` with local values. The backend expects these settings:
 
-![WhatsApp-style VaaniSeva conversational assistant](docs/screenshots/chat.png)
+```env
+APP_NAME=VaaniSeva API
+APP_VERSION=0.1.0
+API_V1_PREFIX=/api/v1
+OTP_SECRET_KEY=replace-with-a-local-secret
+DATABASE_URL=postgresql+psycopg://user:password@localhost:5432/vaaniseva
+JWT_SECRET_KEY=replace-with-a-local-secret
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+GEMINI_API_KEY=replace-with-your-gemini-key
+```
 
-### Certificate Application Flow
+Do not commit real credentials or production secrets. The frontend uses `http://127.0.0.1:8000/api/v1` by default. To point it elsewhere, create `frontend/.env`:
 
-![Certificate application flow](docs/screenshots/apply.png)
+```env
+VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1
+```
 
-### Application Tracking Page
+## Run Locally
 
-![Application tracking page](docs/screenshots/applications.png)
+### 1. Start the backend
 
-### Admin Review Dashboard
+From the repository root:
 
-![Admin review dashboard](docs/screenshots/admin.png)
+```powershell
+cd backend
+python -m venv .venv
+.\\.venv\\Scripts\\Activate.ps1
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn app.main:app --reload
+```
 
-### Approved Certificate Download
+The API is available at `http://127.0.0.1:8000`. FastAPI documentation is available at `/docs`.
 
-![Approved certificate download](docs/screenshots/certificate.png)
+### 2. Start the frontend
 
-## 9. API Overview
+In a second terminal:
 
-The FastAPI backend exposes versioned REST endpoints under `/api/v1`.
+```powershell
+cd frontend
+npm install
+npm run dev
+```
 
-| Area | Example endpoints | Responsibility |
-| --- | --- | --- |
-| OTP Authentication | `POST /otp/request`, `POST /otp/verify` | Request and verify Aadhaar-linked OTPs; issue access tokens |
-| Profile | `GET /profile` | Retrieve the authenticated citizen profile |
-| Applications | `POST /applications`, `GET /applications`, `GET /applications/{id}` | Create and track certificate applications |
-| Certificates | `GET /applications/{id}/certificate` | Download an available certificate |
-| Documents | `POST /documents/upload`, `GET /documents`, `GET /documents/{id}/download` | Upload, list, and view documents |
-| Administration | `/admin/*` | Review, approve, reject, and manage applications |
-| Chat | `/chat/*` | Support chat session and message operations |
+Open the Vite URL shown in the terminal, usually `http://localhost:5173`.
 
-## 10. Future Improvements
+### 3. Optional seed data
 
-- Multilingual text and voice interactions for broader accessibility
-- Real-time application notifications through SMS, WhatsApp, or email
-- Stronger role-based access controls and audit logging
-- OCR-based document validation and completeness checks
-- Integrated payment support for paid public services
-- Analytics dashboard for service demand and processing performance
-- Deployment automation, monitoring, and production-grade file storage
+The backend includes a citizen seed script:
 
-> VaaniSeva is a demonstration project. It does not connect to real Aadhaar records or production government systems.
+```powershell
+cd backend
+python scripts/seed_citizens.py
+```
+
+## Main Screens
+
+| Route | Screen |
+| --- | --- |
+| `/` | Aadhaar and OTP sign-in |
+| `/chat` | VaaniSeva conversational assistant |
+| `/dashboard` | Citizen dashboard |
+| `/apply` | Certificate application form |
+| `/documents` | Uploaded documents |
+| `/applications` | Application list and statuses |
+| `/applications/:id` | Application details and certificate download |
+| `/admin` | Officer application dashboard |
+| `/admin/applications/:id` | Officer application review |
+
+## API Overview
+
+The backend exposes REST endpoints under `/api/v1`:
+
+| Area | Example endpoints |
+| --- | --- |
+| Health | `GET /system/health` |
+| Citizen and auth | `POST /citizens/lookup`, `POST /otp/request`, `POST /otp/verify`, `GET /auth/me` |
+| Profile | `GET /profile` |
+| Applications | `POST /applications`, `GET /applications`, `GET /applications/{application_id}` |
+| Certificates | `GET /applications/{application_id}/certificate` |
+| Documents | `POST /documents/upload`, `GET /documents`, `GET /documents/{document_id}/download` |
+| Chat | `POST /chat`, `POST /chat/apply`, `POST /chat/message`, `GET /chat/sessions` |
+| Administration | `GET /admin/applications`, `POST /admin/applications/{application_id}/approve`, `POST /admin/applications/{application_id}/reject` |
+
+## Tests and Checks
+
+Run the existing backend test file from the repository root:
+
+```powershell
+cd backend
+pytest
+```
+
+Frontend checks are available through the package scripts:
+
+```powershell
+cd frontend
+npm run lint
+npm run build
+```
+
+## Screenshots
+
+Store README screenshots in `docs/screenshots/`. The current six screenshot files use these names:
+
+| Filename | Page shown |
+| --- | --- |
+| `login.png` | Aadhaar and OTP sign-in |
+| `chat.png` | Conversational assistant |
+| `apply.png` | Certificate application |
+| `applications.png` | Application tracker |
+| `admin.png` | Officer review dashboard |
+| `certificate.png` | Approved certificate download |
+
+![Login](docs/screenshots/login.jpg)
+![OTP verification](docs/screenshots/otp.jpg)
+
+
+![Conversational assistant](docs/screenshots/chat.jpg)
+
+![Certificate application](docs/screenshots/apply.jpg)
+
+![Application tracker](docs/screenshots/applications.jpg)
+
+![Officer review dashboard](docs/screenshots/admin.jpg)
+
+![Approved certificate download](docs/screenshots/certificate.jpg)
+
+Copy the attached Document Centre screenshot to `docs/screenshots/documents.png` when adding it to the repository. The other current screenshots already use the documented names, so no rename is required for them.
+
+## Notes
+
+- Database schema changes live in `backend/alembic/versions/`.
+- Local uploads are written to `backend/uploads/documents/`.
+- Generated certificates are written to `backend/certificates/`.
+- The `/phone` frontend route is a development-only OTP display.
