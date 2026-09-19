@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     GEMINI_API_KEY: str
+    FRONTEND_URL: str = "https://vaaniseva-frontend.onrender.com"
 
     model_config = SettingsConfigDict(
         env_file=".env",
